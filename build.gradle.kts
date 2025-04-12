@@ -15,5 +15,5 @@ dependencies {
 
     compileOnly(libs.jetbrains.annotations)
 
-    modImplementation("dev.jwall64:databridge:0.6.0")
+    modImplementation("dev.jwall64:databridge:0.7.0")
 }
