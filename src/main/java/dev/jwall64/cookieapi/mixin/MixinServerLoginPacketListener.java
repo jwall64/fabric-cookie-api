@@ -4,7 +4,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.common.ClientboundStoreCookiePacket;
 import net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket;
 import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import org.spongepowered.asm.mixin.*;
@@ -27,21 +27,21 @@ public class MixinServerLoginPacketListener {
     Connection connection;
 
     @Unique
-    private Map<ResourceLocation, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
+    private Map<Identifier, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
 
     @Inject(method="<init>", at=@At("TAIL"))
     private void onInit(MinecraftServer minecraftServer, Connection connection, boolean bl, CallbackInfo ci) {
         cookieapi$requestedCookies = new ConcurrentHashMap<>();
     }
 
-    public CompletableFuture<byte[]> cookieapi$requestCookie(ResourceLocation location) {
+    public CompletableFuture<byte[]> cookieapi$requestCookie(Identifier location) {
         CompletableFuture<byte[]> future = new CompletableFuture<>();
         cookieapi$requestedCookies.computeIfAbsent(location, k -> new ArrayList<>()).add(future);
         connection.send(new ClientboundCookieRequestPacket(location));
         return future;
     }
 
-    public boolean cookieapi$cookieReceived(ResourceLocation location, byte[] cookie) {
+    public boolean cookieapi$cookieReceived(Identifier location, byte[] cookie) {
 
         List<CompletableFuture<byte[]>> futures = cookieapi$requestedCookies.remove(location);
         if(futures == null) return false;
@@ -50,7 +50,7 @@ public class MixinServerLoginPacketListener {
         return true;
     }
 
-    public void cookieapi$storeCookie(ResourceLocation location, byte[] cookie) {
+    public void cookieapi$storeCookie(Identifier location, byte[] cookie) {
         connection.send(new ClientboundStoreCookiePacket(location, cookie));
     }
 

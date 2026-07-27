@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}-gametest",
+  "version": "${version}",
+    "entrypoints": {
+        "fabric-gametest": [
+            "dev.jwall64.cookieapi.test.GameTests"
+        ]
+    }
+}

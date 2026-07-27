@@ -1,15 +1,15 @@
 package dev.jwall64.cookieapi.impl;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.concurrent.CompletableFuture;
 
 public interface CookieExtension {
 
-    CompletableFuture<byte[]> requestCookie(ResourceLocation location);
+    CompletableFuture<byte[]> requestCookie(Identifier location);
 
-    boolean cookieReceived(ResourceLocation location, byte[] cookie);
+    boolean cookieReceived(Identifier location, byte[] cookie);
 
-    void storeCookie(ResourceLocation location, byte[] cookie);
+    void storeCookie(Identifier location, byte[] cookie);
 
 }

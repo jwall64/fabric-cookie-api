@@ -3,7 +3,7 @@ package dev.jwall64.cookieapi.mixin;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.common.ClientboundStoreCookiePacket;
 import net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -23,21 +23,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MixinServerGamePacketListener {
 
     @Unique
-    private Map<ResourceLocation, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
+    private Map<Identifier, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
 
     @Inject(method="<init>", at=@At("TAIL"))
     private void onInit(MinecraftServer minecraftServer, Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
         cookieapi$requestedCookies = new ConcurrentHashMap<>();
     }
 
-    public CompletableFuture<byte[]> cookieapi$requestCookie(ResourceLocation location) {
+    public CompletableFuture<byte[]> cookieapi$requestCookie(Identifier location) {
         CompletableFuture<byte[]> future = new CompletableFuture<>();
         cookieapi$requestedCookies.computeIfAbsent(location, k -> new ArrayList<>()).add(future);
         ((ServerGamePacketListenerImpl) (Object) this).send(new ClientboundCookieRequestPacket(location));
         return future;
     }
 
-    public boolean cookieapi$cookieReceived(ResourceLocation location, byte[] cookie) {
+    public boolean cookieapi$cookieReceived(Identifier location, byte[] cookie) {
         List<CompletableFuture<byte[]>> futures = cookieapi$requestedCookies.remove(location);
         if(futures == null) return false;
 
@@ -45,7 +45,7 @@ public class MixinServerGamePacketListener {
         return true;
     }
 
-    public void cookieapi$storeCookie(ResourceLocation location, byte[] cookie) {
+    public void cookieapi$storeCookie(Identifier location, byte[] cookie) {
         ((ServerGamePacketListenerImpl) (Object) this).send(new ClientboundStoreCookiePacket(location, cookie));
     }
 

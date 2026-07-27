@@ -1,31 +1,26 @@
 import buildlogic.Utils
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import net.fabricmc.loom.task.RemapJarTask
-import net.fabricmc.loom.task.RemapSourcesJarTask
 
 plugins {
     id("build.common")
-    id("build.shadow")
-    id("fabric-loom")
-    id("com.gradleup.shadow")
+    id("net.fabricmc.fabric-loom")
 }
 
-sourceSets {
-    register("testmod") {
-
-        val main = sourceSets.main.get()
-
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "${rootProject.name}-tests"
+        enableGameTests = true
+        enableClientGameTests = true
+        eula = true
+        clearRunDirectory = true
+        username = "Player0"
     }
 }
+
+val workingDir = project.projectDir.toPath()
+val tmpDir = System.getProperty("java.io.tmpdir")
 
 loom {
-    mods {
-        register(project.name + "-testmod") {
-            sourceSet(sourceSets["testmod"])
-        }
-    }
     runs {
         getByName("client") {
             runDir = "run/client"
@@ -37,19 +32,29 @@ loom {
             ideConfigGenerated(false)
             server()
         }
-        register("testmodClient") {
-            client()
-            ideConfigGenerated(false)
-            runDir = "run/testclient"
-            name = "Testmod Client"
-            source(sourceSets.getByName("testmod"))
+        getByName("gameTest") {
+            val randomString = List(16) { ('a'..'z').random() }.joinToString("")
+            val tmpRunDir = file("${tmpDir}/gt_${randomString}").toPath()
+            runDir = workingDir.relativize(tmpRunDir).toString()
         }
-        register("testmodServer") {
-            server()
+        getByName("clientGameTest") {
+            val randomString = List(16) { ('a'..'z').random() }.joinToString("")
+            val tmpRunDir = file("${tmpDir}/gtc_${randomString}").toPath()
+            runDir = workingDir.relativize(tmpRunDir).toString()
+        }
+        register("testClient") {
+            name = "Test Client"
+            runDir = "run/testClient"
             ideConfigGenerated(false)
-            runDir = "run/testserver"
-            name = "Testmod Server"
-            source(sourceSets.getByName("testmod"))
+            client()
+            source(sourceSets.getByName("gametest"))
+        }
+        register("testServer") {
+            name = "Test Server"
+            runDir = "run/testServer"
+            ideConfigGenerated(false)
+            server()
+            source(sourceSets.getByName("gametest"))
         }
     }
     mixin {
@@ -57,44 +62,5 @@ loom {
     }
 }
 
-dependencies {
-    "testmodImplementation"(sourceSets.main.get().output)
-}
-
-val archiveName = Utils.getArchiveName(project, rootProject)
-
-val finalShadow = tasks.register<ShadowJar>("finalShadow") {
-
-    val remapJar = tasks.named<RemapJarTask>("remapJar").get()
-    dependsOn(remapJar)
-    from(zipTree(remapJar.archiveFile))
-
-    archiveClassifier.set("")
-    archiveBaseName.set(archiveName)
-
-    configurations = listOf(project.configurations["shadow"])
-}
-
-tasks.named("build") {
-    dependsOn(finalShadow)
-}
-
-tasks.named<Jar>("jar") {
-    archiveBaseName.set(archiveName)
-    archiveClassifier.set("partial-dev")
-}
-
-tasks.named<RemapJarTask>("remapJar") {
-    archiveBaseName.set(archiveName)
-    archiveClassifier.set("partial")
-    inputFile.set(tasks.named<Jar>("jar").get().archiveFile)
-}
-
-tasks.named<RemapSourcesJarTask>("remapSourcesJar") {
-    archiveBaseName.set(archiveName)
-    archiveClassifier.set("sources")
-}
-
-tasks.named<ShadowJar>("shadowJar") {
-    enabled = false
-}
+val archiveName = Utils.getArchiveName(project)
+Utils.setupResources(project, rootProject, "fabric.mod.json")

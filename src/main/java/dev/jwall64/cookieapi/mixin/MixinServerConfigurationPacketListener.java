@@ -3,7 +3,7 @@ package dev.jwall64.cookieapi.mixin;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.common.ClientboundStoreCookiePacket;
 import net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ConfigurationTask;
@@ -35,7 +35,7 @@ public abstract class MixinServerConfigurationPacketListener extends ServerCommo
     @Shadow protected abstract void finishCurrentTask(ConfigurationTask.Type type);
 
     @Unique
-    private Map<ResourceLocation, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
+    private Map<Identifier, List<CompletableFuture<byte[]>>> cookieapi$requestedCookies;
 
     @Unique
     private AtomicBoolean cookieapi$awaitingCookies;
@@ -53,14 +53,14 @@ public abstract class MixinServerConfigurationPacketListener extends ServerCommo
         configurationTasks.add(new AwaitCookiesTask(ext));
     }
 
-    public CompletableFuture<byte[]> cookieapi$requestCookie(ResourceLocation location) {
+    public CompletableFuture<byte[]> cookieapi$requestCookie(Identifier location) {
         CompletableFuture<byte[]> future = new CompletableFuture<>();
         cookieapi$requestedCookies.computeIfAbsent(location, k -> new ArrayList<>()).add(future);
         this.send(new ClientboundCookieRequestPacket(location));
         return future;
     }
 
-    public boolean cookieapi$cookieReceived(ResourceLocation location, byte[] cookie) {
+    public boolean cookieapi$cookieReceived(Identifier location, byte[] cookie) {
 
         if(!cookieapi$awaitingCookies.get()) return false;
 
@@ -77,7 +77,7 @@ public abstract class MixinServerConfigurationPacketListener extends ServerCommo
         return true;
     }
 
-    public void cookieapi$storeCookie(ResourceLocation location, byte[] cookie) {
+    public void cookieapi$storeCookie(Identifier location, byte[] cookie) {
         send(new ClientboundStoreCookiePacket(location, cookie));
     }
 

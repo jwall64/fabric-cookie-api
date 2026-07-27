@@ -7,8 +7,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.progress.LevelLoadListener;
+import net.minecraft.server.notifications.NotificationManager;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import dev.jwall64.cookieapi.api.ConfigurationCookieEvents;
 import dev.jwall64.cookieapi.impl.ServerExtension;
 
+import java.util.Optional;
 import java.net.Proxy;
 
 @Mixin(MinecraftServer.class)
@@ -29,7 +32,7 @@ public class MixinMinecraftServer {
     private Event<ConfigurationCookieEvents.RequestCookies> cookieapi$serverEvent;
 
     @Inject(method="<init>", at=@At("TAIL"))
-    private void onInit(Thread thread, LevelStorageSource.LevelStorageAccess levelStorageAccess, PackRepository packRepository, WorldStem worldStem, Proxy proxy, DataFixer dataFixer, Services services, LevelLoadListener levelListener, CallbackInfo ci) {
+    private void onInit(Thread thread, LevelStorageSource.LevelStorageAccess levelStorageAccess, PackRepository packRepository, WorldStem worldStem, Optional<GameRules> gameRules, Proxy proxy, DataFixer dataFixer, Services services, LevelLoadListener levelListener, boolean propagatesCrashes, NotificationManager notificationManager, CallbackInfo ci) {
         cookieapi$serverEvent = EventFactory.createArrayBacked(ConfigurationCookieEvents.RequestCookies.class, listeners -> (server, packetListener) -> {
             for(ConfigurationCookieEvents.RequestCookies cookie : listeners) {
                 cookie.request(server, packetListener);
