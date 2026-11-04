@@ -17,10 +17,10 @@ dependencies {
     listOf(
         "fabric-api-base"
     ).forEach { mod ->
-        api(include(fabricApi.module(mod, "${project.properties["fabric-api-version"]}"))!!)
+        api(include(fabricApi.module(mod, "${project.findProperty("fabric-api-version")}"))!!)
     }
 
-    gametestRuntimeOnly("dev.jwall64:databridge:0.12.1")
+    gametestRuntimeOnly("dev.jwall64:databridge:0.12.2")
 
     // Gametest API modules
     val testApiModules = listOf(
@@ -28,6 +28,6 @@ dependencies {
         "fabric-registry-sync-v0"
     )
     for(mod in testApiModules) {
-        gametestImplementation(fabricApi.module(mod, "${project.properties["fabric-api-version"]}"))
+        gametestImplementation(fabricApi.module(mod, "${project.findProperty("fabric-api-version")}"))
     }
 }
